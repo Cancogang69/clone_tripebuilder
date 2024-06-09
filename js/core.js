@@ -1,6 +1,6 @@
-import { Clock, Box3, Vector3, DirectionalLight, HemisphereLight, AmbientLight,
-        PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer, Color,
-        Float32BufferAttribute, BufferGeometry, PointsMaterial, Points} from 'three';
+import { Clock, Box3, Vector3, DirectionalLight, HemisphereLight, AmbientLight, MeshStandardMaterial,
+        PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer, Color, SphereGeometry, Mesh,
+        Float32BufferAttribute, BufferGeometry, PointsMaterial, Points, TextureLoader} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Board } from './board.js';
 import { ModelManager } from './model.js';
@@ -13,7 +13,8 @@ import { GameStarter } from './gameStarter.js';
 import { GameTimer } from './gameTimer.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import data from "../assets/decorations/decors.json" assert { type: "json"}
+import data from "../assets/paths/decoration_paths.json" assert { type: "json"}
+import texturePaths from "../assets/paths/texture_paths.json" assert { type: "json"}
 
 
 export class Core {
@@ -40,13 +41,12 @@ export class Core {
     snowParticles;
     snowParticleSystem;
 
-    constructor(onReady, scoreUI, highscoreUI, timerUI, gameTime, texturePath) {
+    constructor(onReady, UIComponents) {
         this.clock = new Clock();
-        this.scoreUI = scoreUI
-        this.highscoreUI = highscoreUI
-        this.timerUI = timerUI
-        this.gameTime = gameTime
-        this.texturePath = texturePath
+        this.scoreUI = UIComponents.scoreUI
+        this.highscoreUI = UIComponents.highscoreUI
+        this.timerUI = UIComponents.timerUI
+        this.gameTime = UIComponents.gameTime
 
         // renderer section
         this.renderer = new WebGLRenderer({
@@ -68,13 +68,13 @@ export class Core {
         const ambientLight = new AmbientLight(0xffffff, 3);
         this.scene.add(ambientLight);
 
-        const hemiLight = new HemisphereLight(0xffffff, 0xffffff, 5);
+        const hemiLight = new HemisphereLight(0xffffff, 0xffffff, 3.5);
         hemiLight.color.setHSL(0.6, 1, 0.6);
         hemiLight.groundColor.setHSL(0.095, 1, 0.75);
         hemiLight.position.set(0, 50, 0);
         this.scene.add(hemiLight);
         
-        const dirLight = new DirectionalLight(0xff0000, 4.5);
+        const dirLight = new DirectionalLight(0xff0000, 3.5);
         dirLight.color.setHSL(0.1, 1, 0.95);
         dirLight.position.set(1, 1.2, -1);
         dirLight.position.multiplyScalar(500);
@@ -117,7 +117,7 @@ export class Core {
             scope.soundMgr = new SoundManager(scope.camera);
             scope.scoreMgr = new ScoreManager(scope.scene, scope.camera, scope.control, scope.scoreUI, scope.highscoreUI);
             scope.board = new Board(scope.scene, scope.model, scope.camera, scope.control, 
-                scope.scoreMgr, scope.soundMgr, scope.gameTimer, scope.texturePath);
+                scope.scoreMgr, scope.soundMgr, scope.gameTimer, texturePaths.boardTexture);
             scope.gameLogic = new GameLogic(scope.scene, scope.camera, scope.control, scope.board, scope.model, scope.scoreMgr, scope.soundMgr, scope.gameTimer);
             scope.tileHolder = new TileHolder(scope.scene, scope.camera, scope.control, scope.model);
             scope.gameLogic.setTileHolder(scope.tileHolder);
@@ -146,9 +146,11 @@ export class Core {
             })
             scope.createSnow()
 
-            // if(scope.aircraft) {
-            //     scope.createAircraftAnimation()
-            // }
+            const starRadius = 2
+            const starPosition = {x: 60, y: 62, z: 30}
+            const star = scope.createStar(starRadius, texturePaths.starTexture)
+            star.position.set(starPosition.x, starPosition.y, starPosition.z)
+            scope.scene.add(star)
 
             if (onReady) {
                 onReady();
@@ -202,6 +204,18 @@ export class Core {
         }
 
         this.snowParticleSystem.geometry.attributes.position.needsUpdate = true;
+    }
+
+    createStar(radius, texturePath) {
+        const geometry = new SphereGeometry(radius)
+        const loader = new TextureLoader()
+        const material = new MeshStandardMaterial({
+            map: loader.load(texturePath),
+            bumpMap: loader.load(texturePath),
+            bumpScale: 1
+        })
+        const star = new Mesh(geometry, material)
+        return star
     }
 
     getObjectMaxSize(object) {
