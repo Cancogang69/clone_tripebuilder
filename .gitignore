@@ -7,4 +7,5 @@ node_modules/
 .triplebuilder_src/
 .vite/
 
+*.zip
 trash.js
