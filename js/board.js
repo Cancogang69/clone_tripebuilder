@@ -1,4 +1,4 @@
-import { BoxGeometry, MeshPhongMaterial, Mesh, 
+import { BoxGeometry, MeshPhongMaterial, Mesh, CylinderGeometry,
          MeshBasicMaterial, MeshStandardMaterial, Box3, Sphere,
          Vector3, TextureLoader, Plane, MathUtils as THREEMATH } from "three";
 import * as TWEEN from '@tweenjs/tween.js';
@@ -49,6 +49,7 @@ export class Board {
     matSelect;
     matNormal;
     curtain;
+    pillar;
     textureLoader;
     texturePath;
     scoreMgr;
@@ -262,9 +263,9 @@ export class Board {
         this.camControl.object.lookAt(sphere.center);
         this.camControl.update();
         this.camControl.minDistance = sphere.radius;
-        this.camControl.maxDistance = sphere.radius * 2;
+        this.camControl.maxDistance = sphere.radius * 3;
 
-        // 바닥판옆면을 가리기 위한 커튼 설치
+        // Box
         const curtainHeight = 50;
         const boundingSize = new Vector3(), boundingCenter = new Vector3();
         bounding.getSize(boundingSize);
@@ -278,15 +279,40 @@ export class Board {
         this.curtain.position.x = boundingCenter.x;
         this.curtain.position.y = -(boundingSize.y * 0.25) - (curtainHeight * 0.5);
         this.curtain.position.z = boundingCenter.z;
+
+        // Pillar
+        const pillarRadius = 5;
+        const pillarHeight = 50;
+        this.pillar = this.getCylinder(pillarRadius, pillarHeight)
+        this.pillar.material.map = this.textureLoader.load(this.texturePath)
+        this.pillar.material.bumpMap = this.textureLoader.load(this.texturePath)
+        this.pillar.material.bumpScale = 10
+
+        const pillar_spec = [
+            {x: 0, y: -pillarHeight -(curtainHeight/2), z: 0},
+            {x: boundingSize.x - pillarRadius*2, y: -pillarHeight -(curtainHeight/2), z: 0},
+            {x: 0, y: -pillarHeight -(curtainHeight/2), z: boundingSize.z - pillarRadius*2},
+            {x: boundingSize.x - pillarRadius*2, y: -pillarHeight -(curtainHeight/2), z: boundingSize.z - pillarRadius*2},
+        ]
+
+        pillar_spec.forEach(spec => {
+            const pillar = this.pillar.clone()
+            pillar.position.set(spec.x, spec.y, spec.z)
+            this.scene.add(pillar)
+        })
+
         this.scene.add(this.curtain);
 
         // 바운딩 저장
         this.boardBounding.copy(bounding);
     }
 
-    /**
-     * w,h에 매칭되는 타일 레벨 반환
-     */
+    getCylinder(radius, height) {
+        const geometry = new CylinderGeometry(radius, radius, height)
+        const material = new MeshStandardMaterial()
+        const cylinder = new Mesh(geometry, material)
+        return cylinder
+    }
     findMatchedLevel(w, h, levelStorageTile) {
 
         let result = 0;

@@ -1,6 +1,6 @@
-import { Clock, Box3, Vector3, Color, DirectionalLight, HemisphereLight, AmbientLight,
-        PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer, Object3D, MeshBasicMaterial, 
-        Euler, Float32BufferAttribute, BufferGeometry, PointsMaterial, Points} from 'three';
+import { Clock, Box3, Vector3, DirectionalLight, HemisphereLight, AmbientLight,
+        PCFSoftShadowMap, PerspectiveCamera, Scene, WebGLRenderer, Color,
+        Float32BufferAttribute, BufferGeometry, PointsMaterial, Points} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Board } from './board.js';
 import { ModelManager } from './model.js';
@@ -15,9 +15,7 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import data from "../assets/decorations/decors.json" assert { type: "json"}
 
-/**
- * 엔진 코어
- */
+
 export class Core {
     renderer;
     scene;
@@ -148,6 +146,10 @@ export class Core {
             })
             scope.createSnow()
 
+            // if(scope.aircraft) {
+            //     scope.createAircraftAnimation()
+            // }
+
             if (onReady) {
                 onReady();
             }
@@ -202,6 +204,13 @@ export class Core {
         this.snowParticleSystem.geometry.attributes.position.needsUpdate = true;
     }
 
+    getObjectMaxSize(object) {
+        const box = new Box3().setFromObject(object);
+        const size = box.getSize(new Vector3());
+        const maxSize = Math.max(size.x, size.y, size.y);
+        return maxSize
+    }
+
     loadAircraftModel() {
         const scope = this;
     
@@ -217,11 +226,9 @@ export class Core {
                         object.position.set(5, 40, 50);
                         object.rotation.set(0, 29.8, 0);
                         //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 15;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
+                        const maxSize = scope.getObjectMaxSize(object)
+                        const desizedSize = 15;
+                        object.scale.multiplyScalar(desizedSize / maxSize);
                         //
                         scope.scene.add(object);
                         scope.aircraft = object; 
@@ -602,9 +609,7 @@ export class Core {
                 objLoader.load(
                     obj_path, 
                     function(object) {
-                        const box = new Box3().setFromObject(object);
-                        const size = box.getSize(new Vector3());
-                        const maxSize = Math.max(size.x, size.y, size.y);
+                        const maxSize = scope.getObjectMaxSize(object);
 
                         inform.instance_spec.forEach(spec => {
                             const clone_obj = object.clone()

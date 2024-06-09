@@ -52,7 +52,7 @@
   {
     "name": "flower",
     "path": "assets/models/flower/",
-    "desize": 3,
+    "desize": 1,
     "instance_spec": [
       {
         "initPosition": [15, 0.3, 15.5],
