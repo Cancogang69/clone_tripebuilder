@@ -1,5 +1,75 @@
 {
-  "airplane": {
-    
-  }
+  "decors": [{
+    "name": "tree",
+    "path": "assets/models/tree/",
+    "desize": 10,
+    "instance_spec": [
+      {
+        "initPosition": [-4.4, 0, 94.4],
+        "initAngle": [0, 29.8, 0]
+      },
+      {
+        "initPosition": [94.1, 0, -4.4],
+        "initAngle": [0, 29.8, 0]
+      },
+      {
+        "initPosition": [-4.4, 0, -4.5],
+        "initAngle": [0, 29.8, 0]
+      },
+      {
+        "initPosition": [94.2, 0, 94.31],
+        "initAngle": [0, 29.8, 0]
+      },
+      {
+        "initPosition": [94.6, 0, 45],
+        "initAngle": [0, 29.8, 0]
+      },
+      {
+        "initPosition": [-4.5, 0, 44.8],
+        "initAngle": [0, 29.8, 0]
+      }
+    ]
+  }, 
+  {
+    "name": "cloud",
+    "path": "assets/models/cloud/",
+    "desize": 10,
+    "instance_spec": [
+      {
+        "initPosition": [50, 60, 30],
+        "initAngle": [0, 30, 0]
+      },
+      {
+        "initPosition": [80, 55, 60],
+        "initAngle": [0, 30, 0]
+      },
+      {
+        "initPosition": [7, 55, 60],
+        "initAngle": [0, 5, 0]
+      }
+    ]
+  },
+  {
+    "name": "flower",
+    "path": "assets/models/flower/",
+    "desize": 3,
+    "instance_spec": [
+      {
+        "initPosition": [15, 0.3, 15.5],
+        "initAngle": [0, 1.5, 0]
+      },
+      {
+        "initPosition": [16, 0.3, 55],
+        "initAngle": [0, 1.5, 0]
+      },
+      {
+        "initPosition": [85.8, 0.3, 85.5],
+        "initAngle": [0, 1.5, 0]
+      },
+      {
+        "initPosition": [65, 0.3, 35],
+        "initAngle": [0, 1.5, 0]
+      }
+    ]
+  }]
 }

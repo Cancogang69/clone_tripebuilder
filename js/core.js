@@ -13,6 +13,7 @@ import { GameStarter } from './gameStarter.js';
 import { GameTimer } from './gameTimer.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import data from "../assets/decorations/decors.json" assert { type: "json"}
 
 /**
  * 엔진 코어
@@ -38,52 +39,16 @@ export class Core {
     gameTimer;
     texturePath;
 
-    decorations;
-    decoration_specs;
-
     snowParticles;
     snowParticleSystem;
 
     constructor(onReady, scoreUI, highscoreUI, timerUI, gameTime, texturePath) {
-        const modelsPath = "./assets/models/"
         this.clock = new Clock();
         this.scoreUI = scoreUI
         this.highscoreUI = highscoreUI
         this.timerUI = timerUI
         this.gameTime = gameTime
         this.texturePath = texturePath
-        this.decorations = []
-        this.decoration_specs = [{
-            startPosition: new Vector3(-4.4, 0, 94.4),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }, {
-            startPosition: new Vector3(94.1, 0, -4.4),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }, {
-            startPosition: new Vector3(-4.4, 0, -4.5),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }, {
-            startPosition: new Vector3(94.2, 0, 94.31),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }, {
-            startPosition: new Vector3(94.6, 0, 45),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }, {
-            startPosition: new Vector3(-4.5, 0, 44.8),
-            endPosition: new Vector3(100, 35, 50),
-            initAngle: new Euler(0, 29.8, 0),
-            rotate: 90
-        }]
 
         // renderer section
         this.renderer = new WebGLRenderer({
@@ -178,14 +143,9 @@ export class Core {
             scope.loadBugatti1Model();
             scope.loadBugatti2Model();
             scope.loadBugatti3Model();
-            scope.loadTree(modelsPath + "tree/", scope.decoration_specs);
-            scope.loadCloud1();
-            scope.loadCloud2();
-            scope.loadCloud3();
-            scope.loadFlower1();
-            scope.loadFlower2();
-            scope.loadFlower3();
-            scope.loadFlower4();
+            data.decors.forEach(decor => {
+                scope.loadDecors(decor)
+            })
             scope.createSnow()
 
             if (onReady) {
@@ -626,11 +586,13 @@ export class Core {
         moveTween.start();
     }
 
-    loadTree(path, specs) {
+    loadDecors(inform) {
         const scope = this;
 
-        const mtl_path = path + "tree.mtl"
-        const obj_path = path + "tree.obj"
+        const path = inform.path
+        const name = inform.name
+        const mtl_path = path + name + ".mtl"
+        const obj_path = path + name + ".obj"
         const mtlLoader = new MTLLoader();
         mtlLoader.load(
             mtl_path, 
@@ -640,373 +602,24 @@ export class Core {
                 objLoader.load(
                     obj_path, 
                     function(object) {
-                        specs.forEach(spec => {
+                        const box = new Box3().setFromObject(object);
+                        const size = box.getSize(new Vector3());
+                        const maxSize = Math.max(size.x, size.y, size.y);
+
+                        inform.instance_spec.forEach(spec => {
                             const clone_obj = object.clone()
 
-                            clone_obj.position.copy(spec.startPosition);
-                            clone_obj.rotation.copy(spec.initAngle);
-                            const box = new Box3().setFromObject(clone_obj);
-                            const size = box.getSize(new Vector3());
-                            const maxSize = Math.max(size.x, size.y,size.y);
-                            const desizedSize = 10;
-                            clone_obj.scale.multiplyScalar(desizedSize / maxSize);
+                            const pos = spec.initPosition
+                            const rot = spec.initAngle
+                            clone_obj.position.set(pos[0], pos[1], pos[2]);
+                            clone_obj.rotation.set(rot[0], rot[1], rot[2]);
+                            
+                            clone_obj.scale.multiplyScalar(inform.desize / maxSize);
                             
                             scope.scene.add(clone_obj);
                         });
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
                     }
                 );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadCloud1() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/cloud/cloud.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/cloud/cloud.obj', 
-                    function(object) {
-                        object.position.set(50, 60, 30);
-                        object.rotation.set(0, 30, 0);
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 10;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.cloud1 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadCloud2() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/cloud/cloud.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/cloud/cloud.obj', 
-                    function(object) {
-                        object.position.set(80, 55, 60);
-                        object.rotation.set(0, 30, 0);
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 10;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.cloud2 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadCloud3() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/cloud/cloud.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/cloud/cloud.obj', 
-                    function(object) {
-                        object.position.set(7, 55, 60);
-                        object.rotation.set(0, 5, 0);
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 14;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.cloud3 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadTable() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/table/table.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/table/table.obj', 
-                    function(object) {
-                        object.position.set(44.4, -52.2, 41.5);
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        object.scale.x *= 100/ size_1.x; // Thay đổi chỉ chiều rộng
-                        object.scale.y *= 52 / size_1.y;
-                        object.scale.z *= 100 / size_1.z;
-                        //
-                        scope.scene.add(object);
-                        scope.Table = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-
-    loadFlower1() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/flower/flower.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/flower/flower.obj', 
-                    function(object) {
-                        object.position.set(15, 0.3, 15.5);
-                        object.rotation.set(0, 1.5, 0);
-
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 3;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.flower1 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadFlower2() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/flower/flower.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/flower/flower.obj', 
-                    function(object) {
-                        object.position.set(16, 0.3, 55);
-                        object.rotation.set(0, 1.5, 0);
-
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 3;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.flower2 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadFlower3() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/flower/flower.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/flower/flower.obj', 
-                    function(object) {
-                        object.position.set(85.8, 0.3, 85.5);
-                        object.rotation.set(0, 1.5, 0);
-
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 3;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.flower3 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
-            }
-        );
-    }
-
-    loadFlower4() {
-        const scope = this;
-    
-        const mtlLoader = new MTLLoader();
-        mtlLoader.load(
-            'assets/models/flower/flower.mtl', 
-            function(materials) {
-                const objLoader = new OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.load(
-                    'assets/models/flower/flower.obj', 
-                    function(object) {
-                        object.position.set(65, 0.3, 35);
-                        object.rotation.set(0, 1.5, 0);
-
-                        //
-                        const box_1 = new Box3().setFromObject(object);
-                        const size_1 = box_1.getSize(new Vector3());
-                        const maxSize_1 = Math.max(size_1.x, size_1.y,size_1.y);
-                        const desizedSize_1 = 3;
-                        object.scale.multiplyScalar(desizedSize_1/maxSize_1);
-                        //
-                        scope.scene.add(object);
-                        scope.flower4 = object; 
-
-                    },
-                    function(xhr) {
-                        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-                    },
-                    function(error) {
-                        console.error('Error loading aircraft model:', error);
-                    }
-                );
-            },
-            function(xhr) {
-                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-            },
-            function(error) {
-                console.error('Error loading plane materials:', error);
             }
         );
     }
